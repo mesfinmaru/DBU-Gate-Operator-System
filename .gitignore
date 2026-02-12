@@ -1,0 +1,17 @@
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.DS_Store
+
+# Backend (Laravel)
+laravel-backend/vendor/
+laravel-backend/storage/
+laravel-backend/.env
+laravel-backend/.DS_Store
+
+# IDE/OS
+.vscode/
+.trae/
+.DS_Store
+Thumbs.db
