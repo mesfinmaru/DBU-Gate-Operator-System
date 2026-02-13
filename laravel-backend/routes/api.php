@@ -5,6 +5,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\GateController;
 Route::post('/auth/login', [AuthController::class,'login']);
 Route::post('/auth/register', [AuthController::class,'register'])->middleware('auth:sanctum');
+Route::get('/health', function () { return response()->json(['service'=>'EACS API','status'=>'ok']); });
 Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('admin')->group(function () {
         Route::post('/register-asset', [AdminController::class,'registerAsset']);

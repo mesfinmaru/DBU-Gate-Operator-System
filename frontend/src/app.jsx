@@ -15,7 +15,7 @@ export default function App() {
 
   useEffect(() => {
     const api = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`
-    fetch(`${api}/healthz`)
+    fetch(`${api}/api/health`)
       .then(res => res.json())
       .then(setHealth)
       .catch(() => setError('Backend unreachable'))
