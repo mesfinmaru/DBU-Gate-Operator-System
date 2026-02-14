@@ -41,12 +41,29 @@ export default function Login({ onLoggedIn }) {
             <input className="dbu-input" type="password" value={password} onChange={e => setPassword(e.target.value)} />
         </div>
         {error && <div style={{ color: 'red', marginBottom: 12 }}>{error}</div>}
-        <div className="alert alert-info small mb-3">
-          <strong>Demo Credentials:</strong><br/>
-          Admin: <code>admin</code> / <code>admin123</code><br/>
-          Operator: <code>operator</code> / <code>operator123</code>
+        
+        <div style={{ marginBottom: 16 }}>
+          <button className="dbu-btn" style={{ width: '100%', marginBottom: 12 }} disabled={loading}>{loading ? 'Logging in...' : 'Login'}</button>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <button 
+              type="button" 
+              className="dbu-btn" 
+              style={{ background: 'transparent', color: 'var(--dbu-primary)', border: '1px solid var(--dbu-primary)', fontSize: '12px' }}
+              onClick={() => { setUsername('admin'); setPassword('admin123'); setTimeout(() => document.querySelector('form').requestSubmit(), 100); }}
+            >
+              Demo Admin
+            </button>
+            <button 
+              type="button" 
+              className="dbu-btn" 
+              style={{ background: 'transparent', color: 'var(--neon)', border: '1px solid var(--neon)', fontSize: '12px' }}
+              onClick={() => { setUsername('operator'); setPassword('operator123'); setTimeout(() => document.querySelector('form').requestSubmit(), 100); }}
+            >
+              Demo Operator
+            </button>
+          </div>
         </div>
-          <button className="dbu-btn" disabled={loading}>{loading ? 'Logging in...' : 'Login'}</button>
       </form>
       </div>
     </div>

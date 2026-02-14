@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { adminRegisterAsset, adminAssets, adminStudents, adminStatistics, adminAssetStatus, adminStudentStatus } from '../services/api'
+import { adminRegisterAsset, adminAssets, adminStudents, adminStatistics, adminAssetStatus, adminStudentStatus, adminUpdateAsset } from '../services/api'
 import QRCode from 'react-qr-code'
 
 export default function Admin() {
@@ -17,6 +17,7 @@ export default function Admin() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [qrAsset, setQrAsset] = useState(null)
+  const [existingAsset, setExistingAsset] = useState(null)
 
   const loadAll = async () => {
     try {
@@ -31,15 +32,77 @@ export default function Admin() {
 
   useEffect(() => { loadAll() }, [])
 
+  const handlePrintQR = (assetData) => {
+    const data = assetData || qrAsset
+    if (!data) return
+    const qrValue = data.qr_signature || ''
+    
+    const printWindow = window.open('', '_blank')
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>DBU Asset QR - ${data.serial_number}</title>
+          <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; text-align: center; }
+            .ticket { 
+              border: 2px dashed #333; 
+              padding: 20px; 
+              max-width: 300px; 
+              margin: 0 auto; 
+              border-radius: 10px;
+            }
+            .header { font-weight: bold; font-size: 18px; margin-bottom: 15px; text-transform: uppercase; }
+            .qr-container { margin: 20px auto; }
+            .info { margin-top: 15px; text-align: left; font-size: 14px; }
+            .info p { margin: 5px 0; border-bottom: 1px solid #eee; padding-bottom: 3px; }
+            .footer { margin-top: 20px; font-size: 10px; color: #666; }
+          </style>
+        </head>
+        <body>
+          <div className="ticket">
+            <div className="header">DBU Gate Pass System</div>
+            <div className="qr-container">
+              <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrValue)}" alt="QR Code" />
+            </div>
+            <div className="info">
+              <p><strong>S/N:</strong> ${data.serial_number}</p>
+              <p><strong>Brand:</strong> ${data.brand || 'N/A'}</p>
+              <p><strong>Student:</strong> ${data.owner_student_id}</p>
+              <p><strong>Reg Date:</strong> ${new Date().toLocaleDateString()}</p>
+            </div>
+            <div className="footer">
+              Property of Debre Berhan University<br/>
+              Scan to verify exit
+            </div>
+          </div>
+          <script>
+            window.onload = function() { window.print(); }
+          </script>
+        </body>
+      </html>
+    `)
+    printWindow.document.close()
+  }
+
   const submit = async (e) => {
     e.preventDefault()
     setLoading(true)
     setError('')
     setMessage('')
+    setExistingAsset(null)
     try {
       const res = await adminRegisterAsset(form)
+      
+      if (res.status === 'CONFLICT') {
+        setExistingAsset(res.existing_asset)
+        setError('Asset with this serial number already exists!')
+        setLoading(false)
+        return
+      }
+
       setMessage('Asset registered successfully')
       setForm({ owner_student_id: '', serial_number: '', brand: '', color: '', visible_specs: '' })
+      setQrAsset(res.asset)
       await loadAll()
     } catch (err) {
       setError(err.response?.data?.message || err.response?.data?.error || 'Registration failed')
@@ -48,13 +111,44 @@ export default function Admin() {
     }
   }
 
+  const handleOverride = async () => {
+    if (!existingAsset) return
+    if (!window.confirm('Override and reassign this asset to the new student?')) return
+    
+    try {
+      await adminUpdateAsset(existingAsset.asset_id, {
+        owner_student_id: form.owner_student_id,
+        status: 'active'
+      })
+      setMessage('Asset ownership updated successfully!')
+      setExistingAsset(null)
+      setError('')
+      setForm({ owner_student_id: '', serial_number: '', brand: '', color: '', visible_specs: '' })
+      await loadAll()
+    } catch (err) {
+      setError('Failed to update asset')
+    }
+  }
+
   return (
     <div className="dbu-container">
       <div className="dbu-card">
-        <h2>Admin</h2>
+        <h2>Admin Dashboard</h2>
         {message && <div className="dbu-banner ok">{message}</div>}
         {error && <div className="dbu-banner bad">{error}</div>}
-        <h3 style={{ marginTop: 8 }}>Register Asset</h3>
+        
+        {existingAsset && (
+          <div className="dbu-card" style={{ background: '#2a0e10', borderColor: '#b71c1c', marginBottom: 16 }}>
+            <h4 style={{ color: '#d94848', marginTop: 0 }}>Asset Conflict Detected</h4>
+            <p>Serial <strong>{existingAsset.serial_number}</strong> is already owned by <strong>{existingAsset.owner_student_id}</strong>.</p>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button className="dbu-btn" onClick={handleOverride} style={{ background: '#d94848', color: 'white', borderColor: '#b71c1c' }}>Override & Reassign</button>
+              <button className="dbu-btn" onClick={() => { setExistingAsset(null); setError(''); }} style={{ background: 'transparent' }}>Cancel</button>
+            </div>
+          </div>
+        )}
+
+        <h3 style={{ marginTop: 8 }}>Register New Asset</h3>
         <form onSubmit={submit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <div>
             <label>Owner Student ID</label>
@@ -152,7 +246,8 @@ export default function Admin() {
               <div style={{ background:'#fff', padding:12, display:'inline-block', borderRadius:12 }}>
                 <QRCode value={qrAsset.qr_signature || ''} size={180} />
               </div>
-              <div style={{ marginTop: 8 }}>
+              <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
+                <button className="dbu-btn" onClick={() => handlePrintQR(qrAsset)}>Print Sticker</button>
                 <button className="dbu-btn" onClick={() => setQrAsset(null)}>Close</button>
               </div>
             </div>
