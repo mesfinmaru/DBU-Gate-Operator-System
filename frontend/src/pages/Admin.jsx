@@ -43,37 +43,14 @@ export default function Admin() {
         <head>
           <title>DBU Asset QR - ${data.serial_number}</title>
           <style>
-            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; text-align: center; }
-            .ticket { 
-              border: 2px dashed #333; 
-              padding: 20px; 
-              max-width: 300px; 
-              margin: 0 auto; 
-              border-radius: 10px;
-            }
-            .header { font-weight: bold; font-size: 18px; margin-bottom: 15px; text-transform: uppercase; }
-            .qr-container { margin: 20px auto; }
-            .info { margin-top: 15px; text-align: left; font-size: 14px; }
-            .info p { margin: 5px 0; border-bottom: 1px solid #eee; padding-bottom: 3px; }
-            .footer { margin-top: 20px; font-size: 10px; color: #666; }
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 0; margin: 0; text-align: center; }
+            .qr-container { display: flex; justify-content: center; align-items: center; height: 100vh; }
+            img { max-width: 80%; height: auto; }
           </style>
         </head>
         <body>
-          <div className="ticket">
-            <div className="header">DBU Gate Pass System</div>
-            <div className="qr-container">
-              <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrValue)}" alt="QR Code" />
-            </div>
-            <div className="info">
-              <p><strong>S/N:</strong> ${data.serial_number}</p>
-              <p><strong>Brand:</strong> ${data.brand || 'N/A'}</p>
-              <p><strong>Student:</strong> ${data.owner_student_id}</p>
-              <p><strong>Reg Date:</strong> ${new Date().toLocaleDateString()}</p>
-            </div>
-            <div className="footer">
-              Property of Debre Berhan University<br/>
-              Scan to verify exit
-            </div>
+          <div class="qr-container">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrValue)}" alt="QR Code" />
           </div>
           <script>
             window.onload = function() { window.print(); }
