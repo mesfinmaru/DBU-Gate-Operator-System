@@ -20,4 +20,5 @@ php artisan vendor:publish --provider="Laravel\\Sanctum\\SanctumServiceProvider"
 rm -f "$SKELETON/database/migrations/0001_01_01_000000_create_users_table.php" || true
 rm -f "$SKELETON/database/migrations/0001_01_01_000001_create_password_reset_tokens_table.php" || true
 rm -f "$SKELETON/database/migrations/0001_01_01_000002_create_failed_jobs_table.php" || true
+rm -f "$SKELETON/database/migrations/0001_01_01_000001_create_cache_table.php" || true
 echo "Laravel skeleton prepared in $SKELETON"
