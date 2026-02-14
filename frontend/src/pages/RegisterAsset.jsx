@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import QRCode from 'react-qr-code';
-import { adminAPI } from '../services/api';
+import { adminRegisterAsset, adminAssets, adminStudents, adminUpdateAsset } from '../services/api';
 import { logout, getUsername } from '../services/auth';
 
 const RegisterAsset = () => {
@@ -28,8 +28,8 @@ const RegisterAsset = () => {
 
   const fetchStudents = async () => {
     try {
-      const response = await adminAPI.getAllStudents();
-      setStudents(response.students || []);
+      const response = await adminStudents();
+      setStudents(response || []);
     } catch (error) {
       console.error('Failed to fetch students:', error);
     }
@@ -37,8 +37,8 @@ const RegisterAsset = () => {
 
   const fetchAssets = async () => {
     try {
-      const response = await adminAPI.getAllAssets();
-      setRegisteredAssets(response.assets || []);
+      const response = await adminAssets();
+      setRegisteredAssets(response || []);
     } catch (error) {
       console.error('Failed to fetch assets:', error);
     }
@@ -56,7 +56,7 @@ const RegisterAsset = () => {
     setLoading(true);
 
     try {
-      const response = await adminAPI.registerAsset(formData);
+      const response = await adminRegisterAsset(formData);
       
       if (response.status === 'CONFLICT') {
         // Show existing asset for review
@@ -96,7 +96,7 @@ const RegisterAsset = () => {
           status: 'active'
         };
         
-        await adminAPI.updateAsset(showExistingAsset.asset_id, updateData);
+        await adminUpdateAsset(showExistingAsset.asset_id, updateData);
         
         toast.success('Asset ownership updated successfully!');
         setShowExistingAsset(null);
@@ -109,38 +109,70 @@ const RegisterAsset = () => {
     }
   };
 
-  const handlePrintQR = () => {
+  const handlePrintQR = (assetData) => {
+    // If called with no args (from the generated view), use current form data and qrData
+    const data = assetData.serial_number ? assetData : {
+      serial_number: formData.serial_number,
+      brand: formData.brand,
+      owner_student_id: formData.owner_student_id,
+      qr_signature: qrData
+    };
+    
+    // For the generated view, we might not have the QR code SVG readily available if we rely on the DOM
+    // But we can regenerate it in the print window or pass the value
+    const qrValue = data.qr_signature || qrData;
+    
+    if (!qrValue) {
+      toast.error('No QR data available to print');
+      return;
+    }
+
     const printWindow = window.open('', '_blank');
     printWindow.document.write(`
       <html>
         <head>
-          <title>DBU Asset QR - ${formData.serial_number}</title>
+          <title>DBU Asset QR - ${data.serial_number}</title>
           <style>
-            body { font-family: Arial, sans-serif; padding: 20px; text-align: center; }
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 40px; text-align: center; }
+            .ticket { 
+              border: 2px dashed #333; 
+              padding: 20px; 
+              max-width: 300px; 
+              margin: 0 auto; 
+              border-radius: 10px;
+            }
+            .header { font-weight: bold; font-size: 18px; margin-bottom: 15px; text-transform: uppercase; }
             .qr-container { margin: 20px auto; }
-            .info { margin-top: 20px; }
-            .footer { margin-top: 40px; font-size: 12px; color: #666; }
+            .info { margin-top: 15px; text-align: left; font-size: 14px; }
+            .info p { margin: 5px 0; border-bottom: 1px solid #eee; padding-bottom: 3px; }
+            .footer { margin-top: 20px; font-size: 10px; color: #666; }
           </style>
         </head>
         <body>
-          <h3>DBU Registered Asset</h3>
-          <div class="qr-container">
-            ${document.querySelector('.qr-display').innerHTML}
+          <div className="ticket">
+            <div className="header">DBU Gate Pass System</div>
+            <div className="qr-container">
+              <!-- We'll inject the QR code here using a library script or just an image placeholder if we can't render react -->
+              <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrValue)}" alt="QR Code" />
+            </div>
+            <div className="info">
+              <p><strong>S/N:</strong> ${data.serial_number}</p>
+              <p><strong>Brand:</strong> ${data.brand || 'N/A'}</p>
+              <p><strong>Student:</strong> ${data.owner_student_id}</p>
+              <p><strong>Reg Date:</strong> ${new Date().toLocaleDateString()}</p>
+            </div>
+            <div className="footer">
+              Property of Debre Berhan University<br/>
+              Scan to verify exit
+            </div>
           </div>
-          <div class="info">
-            <p><strong>Serial Number:</strong> ${formData.serial_number}</p>
-            <p><strong>Brand:</strong> ${formData.brand}</p>
-            <p><strong>Student ID:</strong> ${formData.owner_student_id}</p>
-            <p><small>Scan this QR code at the university gate</small></p>
-          </div>
-          <div class="footer">
-            DBU Gate Exit System - ${new Date().toLocaleDateString()}
-          </div>
+          <script>
+            window.onload = function() { window.print(); }
+          </script>
         </body>
       </html>
     `);
     printWindow.document.close();
-    printWindow.print();
   };
 
   const handleLogout = () => {
@@ -404,10 +436,10 @@ const RegisterAsset = () => {
                         <td>
                           <button 
                             className="btn btn-sm btn-outline-info me-1"
-                            onClick={() => toast.info(`QR Data: ${asset.qr_signature?.substring(0, 20)}...`)}
-                            title="View QR"
+                            onClick={() => handlePrintQR(asset)}
+                            title="Print QR"
                           >
-                            <i className="bi bi-qr-code"></i>
+                            <i className="bi bi-printer"></i>
                           </button>
                           <button 
                             className="btn btn-sm btn-outline-warning"

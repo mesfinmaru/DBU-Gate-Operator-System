@@ -41,6 +41,11 @@ export default function Login({ onLoggedIn }) {
             <input className="dbu-input" type="password" value={password} onChange={e => setPassword(e.target.value)} />
         </div>
         {error && <div style={{ color: 'red', marginBottom: 12 }}>{error}</div>}
+        <div className="alert alert-info small mb-3">
+          <strong>Demo Credentials:</strong><br/>
+          Admin: <code>admin</code> / <code>admin123</code><br/>
+          Operator: <code>operator</code> / <code>operator123</code>
+        </div>
           <button className="dbu-btn" disabled={loading}>{loading ? 'Logging in...' : 'Login'}</button>
       </form>
       </div>
