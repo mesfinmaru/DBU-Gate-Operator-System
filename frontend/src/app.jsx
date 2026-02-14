@@ -14,6 +14,11 @@ export default function App() {
   const [user, setUser] = useState(null)
 
   useEffect(() => {
+    const useMock = import.meta.env.VITE_USE_MOCK === 'true'
+    if (useMock) {
+      setHealth({ service: 'EACS API', status: 'ok', mock: true })
+      return
+    }
     const api = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`
     fetch(`${api}/api/health`)
       .then(res => res.json())
@@ -63,7 +68,7 @@ export default function App() {
                 <div className="dbu-card">
                   <h2>Welcome</h2>
                   <div className={`dbu-banner ${health ? 'ok' : (error ? 'bad' : '')}`}>
-                    {health ? 'Backend: HEALTHY' : (error ? `Backend: ${error.toUpperCase()}` : 'Checking backend...')}
+                    {health ? (health.mock ? 'Backend: MOCK' : 'Backend: HEALTHY') : (error ? `Backend: ${error.toUpperCase()}` : 'Checking backend...')}
                   </div>
                   <div style={{ marginTop: 16 }}>
                     <a className="dbu-btn" href={(import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000/`)} target="_blank" rel="noreferrer">Open Backend API</a>
