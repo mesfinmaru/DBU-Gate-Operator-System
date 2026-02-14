@@ -120,28 +120,39 @@ export default function GateScan({ user }) {
   }
 
   return (
-    <div className="dbu-container" style={{ maxWidth: 1000 }}>
+    <div className="dbu-container">
       <div className="dbu-card">
-        <h2>Gate Operator</h2>
-        <div style={{ marginBottom: 12 }}>
-          <strong>Logged in:</strong> {user?.username} ({user?.role})
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <h2 style={{ margin: 0 }}>Gate Operator</h2>
+          <div className="dbu-pill">
+            <i className="bi bi-person-circle me-2"></i>
+            {user?.username} ({user?.role})
+          </div>
         </div>
-        <div style={{ marginBottom: 16 }}>
-          <label>Scan Mode</label>{' '}
-          <select value={mode} onChange={e => { stopCamera(); setMode(e.target.value); if (e.target.value === 'camera') autoStartStudentCamera() }}>
+
+        <div style={{ marginBottom: 20 }}>
+          <label style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>Scan Mode</label>
+          <select 
+            className="dbu-input" 
+            value={mode} 
+            onChange={e => { stopCamera(); setMode(e.target.value); if (e.target.value === 'camera') autoStartStudentCamera() }}
+            style={{ maxWidth: 300 }}
+          >
             <option value="camera">Camera</option>
             <option value="usb">USB Scanner</option>
           </select>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-          <div style={{ border: '1px solid #ddd', padding: 12 }}>
-            <h3>Scan Student ID</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+          <div className="dbu-card" style={{ background: '#082832', border: '1px solid var(--panel-border)' }}>
+            <h3 style={{ marginTop: 0, borderBottom: '1px solid var(--panel-border)', paddingBottom: 10 }}>
+              1. Student ID
+            </h3>
             {mode === 'camera' ? (
               <>
-                <div ref={qrRefStudent} style={{ minHeight: 280, background: '#f7f7f7' }} />
+                <div ref={qrRefStudent} style={{ minHeight: 300, background: '#000', borderRadius: 8, overflow: 'hidden' }} />
                 {!cameraActive
-                  ? <button onClick={() => startCamera(
+                  ? <button className="dbu-btn" onClick={() => startCamera(
                       handleScanStudent,
                       qrRefStudent,
                       [
@@ -149,61 +160,107 @@ export default function GateScan({ user }) {
                         Html5QrcodeSupportedFormats.EAN_13,
                         Html5QrcodeSupportedFormats.QR_CODE
                       ]
-                    )} style={{ marginTop: 8 }}>Start Camera</button>
-                  : <button onClick={stopCamera} style={{ marginTop: 8 }}>Stop Camera</button>}
+                    )} style={{ marginTop: 12, width: '100%' }}>
+                      <i className="bi bi-camera-video me-2"></i> Start Camera
+                    </button>
+                  : <button className="dbu-btn" onClick={stopCamera} style={{ marginTop: 12, width: '100%', background: 'var(--dbu-red)', borderColor: 'var(--dbu-red)', color: 'white' }}>
+                      <i className="bi bi-stop-circle me-2"></i> Stop Camera
+                    </button>}
               </>
             ) : (
-              <>
-                <div className="dbu-muted">Scan the student barcode with your USB scanner</div>
-              </>
+              <div style={{ padding: 40, textAlign: 'center', color: 'var(--dbu-muted)' }}>
+                <i className="bi bi-upc-scan" style={{ fontSize: 48, display: 'block', marginBottom: 10 }}></i>
+                Scan student barcode with USB scanner
+              </div>
             )}
           </div>
 
-          <div style={{ border: '1px solid #ddd', padding: 12 }}>
-            <h3>Scan Asset QR</h3>
+          <div className="dbu-card" style={{ background: '#082832', border: '1px solid var(--panel-border)', opacity: phase === 'student' ? 0.5 : 1 }}>
+            <h3 style={{ marginTop: 0, borderBottom: '1px solid var(--panel-border)', paddingBottom: 10 }}>
+              2. Asset QR
+            </h3>
             {mode === 'camera' ? (
               <>
-                <div ref={qrRefAsset} style={{ minHeight: 280, background: '#f7f7f7' }} />
+                <div ref={qrRefAsset} style={{ minHeight: 300, background: '#000', borderRadius: 8, overflow: 'hidden' }} />
                 {!cameraActive
-                  ? <button onClick={() => startCamera(
+                  ? <button className="dbu-btn" onClick={() => startCamera(
                       handleScanAsset,
                       qrRefAsset,
                       [Html5QrcodeSupportedFormats.QR_CODE]
-                    )} style={{ marginTop: 8 }}>Start Camera</button>
-                  : <button onClick={stopCamera} style={{ marginTop: 8 }}>Stop Camera</button>}
+                    )} style={{ marginTop: 12, width: '100%' }} disabled={phase === 'student'}>
+                      <i className="bi bi-qr-code-scan me-2"></i> Start Camera
+                    </button>
+                  : <button className="dbu-btn" onClick={stopCamera} style={{ marginTop: 12, width: '100%', background: 'var(--dbu-red)', borderColor: 'var(--dbu-red)', color: 'white' }}>
+                      <i className="bi bi-stop-circle me-2"></i> Stop Camera
+                    </button>}
               </>
             ) : (
-              <>
-                <div className="dbu-muted">Scan the asset QR with your USB scanner</div>
-              </>
+              <div style={{ padding: 40, textAlign: 'center', color: 'var(--dbu-muted)' }}>
+                <i className="bi bi-qr-code" style={{ fontSize: 48, display: 'block', marginBottom: 10 }}></i>
+                Scan asset QR with USB scanner
+              </div>
             )}
           </div>
         </div>
 
-        <div style={{ marginTop: 16 }}>
-          {status && <div className={`dbu-banner ${status === 'ALLOWED' || status === 'Student OK' ? 'ok' : 'bad'}`}>{status}</div>}
-          {error && <div style={{ color: 'red' }}>{error}</div>}
+        <div style={{ marginTop: 20 }}>
+          {status && <div className={`dbu-banner ${status === 'ALLOWED' || status === 'Student OK' ? 'ok' : 'bad'}`}>
+            <i className={`bi ${status === 'ALLOWED' || status === 'Student OK' ? 'bi-check-circle' : 'bi-x-circle'} me-2`}></i>
+            {status}
+          </div>}
+          
+          {error && <div className="dbu-banner bad">
+            <i className="bi bi-exclamation-triangle me-2"></i>
+            {error}
+          </div>}
+
           {result && (
-            <div style={{ marginTop: 8 }}>
+            <div style={{ marginTop: 20 }}>
               <div className="dbu-owner">
                 <div className="dbu-owner-left">
-                  <div className="dbu-avatar">{(result.student?.full_name || result.student?.student_id || 'U').split(' ').map(x => x[0]).join('').slice(0,2).toUpperCase()}</div>
+                  <div className="dbu-avatar" style={{ width: 64, height: 64, fontSize: 24 }}>
+                    {(result.student?.full_name || result.student?.student_id || 'U').split(' ').map(x => x[0]).join('').slice(0,2).toUpperCase()}
+                  </div>
                   <div>
-                    <div className="dbu-owner-name">{result.student?.full_name || result.student?.student_id}</div>
+                    <div className="dbu-owner-name" style={{ fontSize: 20 }}>{result.student?.full_name || result.student?.student_id}</div>
                     <div className="dbu-owner-id">{result.student?.student_id}</div>
+                    {result.student?.department && <div className="small text-muted">{result.student.department} - {result.student.year}</div>}
                   </div>
                 </div>
                 <div className="dbu-owner-right">
-                  {'has_assets' in result && <div className="dbu-pill">Assets: {result.asset_count}</div>}
-                  {result.student?.status && <div className="dbu-pill">{result.student.status}</div>}
+                  {'has_assets' in result && (
+                    <div className={`dbu-pill ${result.asset_count > 0 ? 'bg-warning text-dark' : 'bg-secondary'}`}>
+                      Assets: {result.asset_count}
+                    </div>
+                  )}
+                  {result.student?.status && (
+                    <div className={`dbu-pill ${result.student.status === 'active' ? 'bg-success' : 'bg-danger'}`}>
+                      {result.student.status.toUpperCase()}
+                    </div>
+                  )}
                 </div>
               </div>
+              
               {result.asset && (
-                <div className="dbu-card" style={{ marginTop: 8 }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-                    <div><strong>ID</strong><div>#{result.asset.asset_id}</div></div>
-                    <div><strong>Brand</strong><div>{result.asset.brand}</div></div>
-                    <div><strong>Color</strong><div>{result.asset.color}</div></div>
+                <div className="dbu-card" style={{ marginTop: 16, borderLeft: '4px solid var(--dbu-primary)' }}>
+                  <h4 style={{ margin: '0 0 10px 0', color: 'var(--dbu-primary)' }}>Asset Details</h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 16 }}>
+                    <div>
+                      <div className="text-muted small">Asset ID</div>
+                      <div style={{ fontWeight: 600 }}>#{result.asset.asset_id}</div>
+                    </div>
+                    <div>
+                      <div className="text-muted small">Brand</div>
+                      <div style={{ fontWeight: 600 }}>{result.asset.brand}</div>
+                    </div>
+                    <div>
+                      <div className="text-muted small">Serial Number</div>
+                      <div style={{ fontWeight: 600 }}>{result.asset.serial_number}</div>
+                    </div>
+                    <div>
+                      <div className="text-muted small">Color</div>
+                      <div style={{ fontWeight: 600 }}>{result.asset.color}</div>
+                    </div>
                   </div>
                 </div>
               )}

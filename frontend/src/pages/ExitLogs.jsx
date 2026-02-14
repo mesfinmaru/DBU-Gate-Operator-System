@@ -21,32 +21,55 @@ export default function ExitLogs() {
   return (
     <div className="dbu-container">
       <div className="dbu-card">
-        <h2>Exit Logs</h2>
-        {error && <div className="dbu-banner bad">{error}</div>}
-        <div style={{ marginBottom: 12 }}>
-          <label>Limit</label>{' '}
-          <input className="dbu-input" type="number" value={limit} onChange={e => setLimit(parseInt(e.target.value || '50', 10))} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <h2 style={{ margin: 0 }}>Exit Logs</h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <label>Limit:</label>
+            <input 
+              className="dbu-input" 
+              type="number" 
+              value={limit} 
+              onChange={e => setLimit(parseInt(e.target.value || '50', 10))} 
+              style={{ width: 80 }}
+            />
+            <button className="dbu-btn" onClick={() => load()}>
+              <i className="bi bi-arrow-clockwise"></i>
+            </button>
+          </div>
         </div>
+
+        {error && <div className="dbu-banner bad">{error}</div>}
+
         <div className="dbu-table">
-          <div className="dbu-thead" style={{ gridTemplateColumns: '140px 120px 100px 100px 100px 1fr' }}>
+          <div className="dbu-thead" style={{ gridTemplateColumns: '180px 1fr 100px 100px 100px 1fr' }}>
             <div>Timestamp</div>
             <div>Student</div>
-            <div>Asset</div>
+            <div>Asset ID</div>
             <div>Operator</div>
             <div>Result</div>
             <div>Reason</div>
           </div>
           <div className="dbu-tbody">
-            {logs.map(l => (
-              <div key={l.log_id} className="dbu-row" style={{ gridTemplateColumns: '140px 120px 100px 100px 100px 1fr' }}>
-                <div>{new Date(l.timestamp).toLocaleString()}</div>
-                <div>{l.student_id}</div>
-                <div>{l.asset_id ?? '-'}</div>
-                <div>{l.operator_id}</div>
-                <div className={l.result === 'ALLOWED' ? 'dbu-status-ok' : 'dbu-status-bad'}>{l.result}</div>
-                <div>{l.reason}</div>
+            {logs.length === 0 ? (
+              <div className="dbu-row" style={{ gridTemplateColumns: '1fr', padding: 20, textAlign: 'center', color: 'var(--dbu-muted)' }}>
+                No logs found
               </div>
-            ))}
+            ) : (
+              logs.map(l => (
+                <div key={l.log_id} className="dbu-row" style={{ gridTemplateColumns: '180px 1fr 100px 100px 100px 1fr', alignItems: 'center' }}>
+                  <div style={{ fontSize: 13, color: 'var(--dbu-muted)' }}>{new Date(l.timestamp).toLocaleString()}</div>
+                  <div style={{ fontWeight: 600 }}>{l.student_id}</div>
+                  <div style={{ fontFamily: 'monospace' }}>{l.asset_id ?? '-'}</div>
+                  <div>{l.operator_id || 'System'}</div>
+                  <div>
+                    <span className={`badge ${l.result === 'ALLOWED' ? 'bg-success' : 'bg-danger'}`}>
+                      {l.result}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 14 }}>{l.reason}</div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
