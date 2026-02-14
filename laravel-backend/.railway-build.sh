@@ -3,7 +3,7 @@ set -e
 DIR="$(pwd)"
 SKELETON="$DIR/.laravel"
 if [ ! -d "$SKELETON" ]; then
-  composer create-project laravel/laravel "$SKELETON"
+  composer create-project --no-scripts laravel/laravel "$SKELETON"
 fi
 cp -r "$DIR/app/Http/Controllers" "$SKELETON/app/Http/" || true
 cp -r "$DIR/app/Models" "$SKELETON/app/" || true
@@ -17,4 +17,4 @@ cp -r "$DIR/database/migrations/" "$SKELETON/database/migrations/" || true
 cd "$SKELETON"
 composer require laravel/sanctum
 php artisan vendor:publish --provider="Laravel\\Sanctum\\SanctumServiceProvider" --force
-php artisan migrate --force
+echo "Laravel skeleton prepared in $SKELETON"
