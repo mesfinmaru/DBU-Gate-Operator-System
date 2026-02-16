@@ -95,21 +95,19 @@ export default function GateScan({ user }) {
     gain.connect(ctx.destination)
     
     if (type === 'success') {
+      // High pitch short beep
       osc.type = 'sine'
-      osc.frequency.setValueAtTime(800, ctx.currentTime)
-      osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.1)
-      gain.gain.setValueAtTime(0.3, ctx.currentTime)
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3)
+      osc.frequency.setValueAtTime(1500, ctx.currentTime)
+      gain.gain.setValueAtTime(0.1, ctx.currentTime)
       osc.start()
-      osc.stop(ctx.currentTime + 0.3)
+      osc.stop(ctx.currentTime + 0.1)
     } else {
-      osc.type = 'sawtooth'
-      osc.frequency.setValueAtTime(200, ctx.currentTime)
-      osc.frequency.linearRampToValueAtTime(100, ctx.currentTime + 0.3)
-      gain.gain.setValueAtTime(0.3, ctx.currentTime)
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3)
+      // Low pitch long beep
+      osc.type = 'square'
+      osc.frequency.setValueAtTime(150, ctx.currentTime)
+      gain.gain.setValueAtTime(0.2, ctx.currentTime)
       osc.start()
-      osc.stop(ctx.currentTime + 0.3)
+      osc.stop(ctx.currentTime + 0.4)
     }
   }
 
@@ -122,12 +120,15 @@ export default function GateScan({ user }) {
       
       const res = await scanStudent(sid)
       
-      if (res.status === 'BLOCKED') {
+      // If blocked or unknown, show the result immediately but DO NOT advance to asset scan
+      if (res.status === 'BLOCKED' || !res.student) {
         setStatus('BLOCKED')
         setError(res.reason)
         playSound('error')
-        // Do NOT advance phase, just show error
-        setResult({ student: res.student, has_assets: false, asset_count: 0 })
+        setResult({ student: res.student || { student_id: sid, full_name: 'Unknown Student', status: 'unknown' }, has_assets: false, asset_count: 0 })
+        // Set phase to 'complete' so we see the big result screen instead of staying in scan mode
+        setPhase('complete')
+        stopCamera()
         return
       }
 
@@ -138,16 +139,19 @@ export default function GateScan({ user }) {
       playSound('success')
       
       if (mode === 'camera') {
-        stopCamera()
-        // Small delay to ensure camera clean up
+        await stopCamera()
+        // Wait for camera to fully release
         setTimeout(() => {
           startCamera(handleScanAsset, qrRefAsset, [Html5QrcodeSupportedFormats.QR_CODE])
-        }, 300)
+        }, 500)
       }
     } catch (err) {
       setStatus('BLOCKED')
       setError(err.response?.data?.reason || err.response?.data?.error || 'Scan failed')
       playSound('error')
+      setResult({ student: { student_id: code, full_name: 'Error Scanning', status: 'error' } })
+      setPhase('complete')
+      stopCamera()
     }
   }
 
@@ -203,17 +207,34 @@ export default function GateScan({ user }) {
                 <div className="dbu-owner" style={{ marginBottom: 20 }}>
                   <div className="dbu-owner-left">
                      <div className="dbu-avatar" style={{ width: 64, height: 64, fontSize: 24 }}>
-                      {(result.student?.full_name || result.student?.student_id || 'U').split(' ').map(x => x[0]).join('').slice(0,2).toUpperCase()}
+                      {(result.student?.full_name || 'U').split(' ').map(x => x[0]).join('').slice(0,2).toUpperCase()}
                     </div>
                     <div>
-                      <div className="dbu-owner-name">{result.student?.full_name || result.student?.student_id}</div>
-                      <div className="dbu-owner-id">{result.student?.student_id}</div>
+                      <div className="dbu-owner-name">{result.student?.full_name || 'Unknown Student'}</div>
+                      <div className="dbu-owner-id">{result.student?.student_id || studentId}</div>
                     </div>
                   </div>
                 </div>
                 {result.asset && (
                   <div className="dbu-card" style={{ borderLeft: `4px solid ${status === 'ALLOWED' ? 'var(--dbu-green)' : 'var(--dbu-red)'}` }}>
-                    <strong>Asset:</strong> {result.asset.brand} - {result.asset.serial_number}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                      <div>
+                        <div className="text-muted small">Asset Brand</div>
+                        <strong>{result.asset.brand || 'N/A'}</strong>
+                      </div>
+                      <div>
+                        <div className="text-muted small">Serial Number</div>
+                        <strong style={{ fontFamily: 'monospace' }}>{result.asset.serial_number || 'N/A'}</strong>
+                      </div>
+                      <div>
+                        <div className="text-muted small">Color</div>
+                        <div>{result.asset.color || 'N/A'}</div>
+                      </div>
+                      <div>
+                         <div className="text-muted small">Asset Status</div>
+                         <div className={`badge ${result.asset.status === 'active' ? 'bg-success' : 'bg-danger'}`}>{result.asset.status || 'unknown'}</div>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>

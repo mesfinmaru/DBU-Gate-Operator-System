@@ -52,14 +52,18 @@ export default function Admin() {
           <div class="qr-container">
             <div style="position:relative;display:inline-block">
               <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrValue)}" alt="QR Code" />
-              <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:4px;border-radius:4px;">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/e/e8/Debre_Berhan_University_logo.png" style="width:40px;height:40px;" />
+              <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:4px;border-radius:4px;z-index:10;">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/e/e8/Debre_Berhan_University_logo.png" style="width:50px;height:50px;display:block;" />
               </div>
             </div>
           </div>
-          <button onclick="window.close()" style="position:fixed;top:20px;right:20px;padding:10px 20px;background:#333;color:white;border:none;border-radius:5px;cursor:pointer;font-size:16px;">Close</button>
+          <div class="no-print" style="position:fixed;top:20px;right:20px;">
+            <button onclick="window.close()" style="padding:12px 24px;background:#333;color:white;border:none;border-radius:8px;cursor:pointer;font-size:16px;box-shadow:0 4px 6px rgba(0,0,0,0.1);">Close Window</button>
+          </div>
           <script>
-            window.onload = function() { window.print(); }
+            // window.onload = function() { window.print(); } 
+            // Auto-print disabled to let user see the button first, or we can use onafterprint
+            setTimeout(function() { window.print(); }, 500);
           </script>
         </body>
       </html>
@@ -273,7 +277,7 @@ export default function Admin() {
               </div>
               <div style={{ marginTop: 20, display: 'flex', gap: 12, justifyContent: 'center' }}>
                 <button className="dbu-btn" onClick={() => handlePrintQR(qrAsset)}><i className="bi bi-printer me-2"></i>Print Sticker</button>
-                <button className="dbu-btn" onClick={() => setQrAsset(null)} style={{ background: 'transparent' }}>Close</button>
+                <button className="dbu-btn" onClick={() => setQrAsset(null)} style={{ background: '#333', color: '#fff', border: '1px solid #555' }}>Close</button>
               </div>
             </div>
           )}
