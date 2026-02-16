@@ -50,8 +50,14 @@ export default function Admin() {
         </head>
         <body>
           <div class="qr-container">
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrValue)}" alt="QR Code" />
+            <div style="position:relative;display:inline-block">
+              <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrValue)}" alt="QR Code" />
+              <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:4px;border-radius:4px;">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/e/e8/Debre_Berhan_University_logo.png" style="width:40px;height:40px;" />
+              </div>
+            </div>
           </div>
+          <button onclick="window.close()" style="position:fixed;top:20px;right:20px;padding:10px 20px;background:#333;color:white;border:none;border-radius:5px;cursor:pointer;font-size:16px;">Close</button>
           <script>
             window.onload = function() { window.print(); }
           </script>

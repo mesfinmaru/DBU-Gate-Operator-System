@@ -87,23 +87,67 @@ export default function GateScan({ user }) {
     setCameraActive(false)
   }
 
+  const playSound = (type) => {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)()
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+    
+    if (type === 'success') {
+      osc.type = 'sine'
+      osc.frequency.setValueAtTime(800, ctx.currentTime)
+      osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.1)
+      gain.gain.setValueAtTime(0.3, ctx.currentTime)
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3)
+      osc.start()
+      osc.stop(ctx.currentTime + 0.3)
+    } else {
+      osc.type = 'sawtooth'
+      osc.frequency.setValueAtTime(200, ctx.currentTime)
+      osc.frequency.linearRampToValueAtTime(100, ctx.currentTime + 0.3)
+      gain.gain.setValueAtTime(0.3, ctx.currentTime)
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3)
+      osc.start()
+      osc.stop(ctx.currentTime + 0.3)
+    }
+  }
+
   const handleScanStudent = async (code) => {
     setError('')
     try {
       const sid = code.trim()
       setStudentId(sid)
+      playSound('scan')
+      
       const res = await scanStudent(sid)
+      
+      if (res.status === 'BLOCKED') {
+        setStatus('BLOCKED')
+        setError(res.reason)
+        playSound('error')
+        // Do NOT advance phase, just show error
+        setResult({ student: res.student, has_assets: false, asset_count: 0 })
+        return
+      }
+
       setStatus('Student OK')
       setExitToken(res.exit_token)
       setResult({ student: res.student, has_assets: res.has_assets, asset_count: res.asset_count })
       setPhase('asset')
+      playSound('success')
+      
       if (mode === 'camera') {
         stopCamera()
-        startCamera(handleScanAsset, qrRefAsset, [Html5QrcodeSupportedFormats.QR_CODE])
+        // Small delay to ensure camera clean up
+        setTimeout(() => {
+          startCamera(handleScanAsset, qrRefAsset, [Html5QrcodeSupportedFormats.QR_CODE])
+        }, 300)
       }
     } catch (err) {
       setStatus('BLOCKED')
       setError(err.response?.data?.reason || err.response?.data?.error || 'Scan failed')
+      playSound('error')
     }
   }
 
@@ -113,12 +157,15 @@ export default function GateScan({ user }) {
       const res = await scanAsset(studentId, qr, exitToken)
       // Use the actual status returned from the backend/mock
       setStatus(res.status)
-      setResult({ student: res.student, asset: res.asset })
+      setResult(prev => ({ ...prev, asset: res.asset }))
       setPhase('complete')
       stopCamera()
+      if (res.status === 'ALLOWED') playSound('success')
+      else playSound('error')
     } catch (err) {
       setStatus('BLOCKED')
       setError(err.response?.data?.reason || err.response?.data?.error || 'Asset validation failed')
+      playSound('error')
     }
   }
 
