@@ -18,7 +18,7 @@ body { margin: 0; background: var(--dbu-bg); color: var(--dbu-text); font-family
   padding: 12px 20px; background: #06242b; color: #e6f6fa; border-bottom: 1px solid var(--panel-border);
 }
 .dbu-brand { display: flex; align-items: center; gap: 12px; font-weight: 800; }
-.dbu-brand span { color: var(--dbu-primary); }
+.dbu-brand span { color: #55c6d6; } /* Match DBU Cyan */
 .dbu-brand img { height: 40px; width: auto; border-radius: 8px; background: transparent; }
 .dbu-nav { display: flex; gap: 12px; }
 .dbu-nav a { color: var(--dbu-text); text-decoration: none; padding: 6px 10px; border-radius: 6px; border: 1px solid transparent; }

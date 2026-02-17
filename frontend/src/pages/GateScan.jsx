@@ -95,16 +95,23 @@ export default function GateScan({ user }) {
     gain.connect(ctx.destination)
     
     if (type === 'success') {
-      // High pitch short beep
+      // "Whistle" / Samsung-like notification
+      // Sine wave: Quick slide up-down
       osc.type = 'sine'
-      osc.frequency.setValueAtTime(1500, ctx.currentTime)
+      osc.frequency.setValueAtTime(1200, ctx.currentTime)
+      osc.frequency.exponentialRampToValueAtTime(1800, ctx.currentTime + 0.1)
+      osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.2)
+      
       gain.gain.setValueAtTime(0.1, ctx.currentTime)
+      gain.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.1)
+      gain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + 0.2)
+      
       osc.start()
-      osc.stop(ctx.currentTime + 0.1)
+      osc.stop(ctx.currentTime + 0.25)
     } else {
-      // Low pitch long beep
+      // Warning Beep
       osc.type = 'square'
-      osc.frequency.setValueAtTime(150, ctx.currentTime)
+      osc.frequency.setValueAtTime(300, ctx.currentTime)
       gain.gain.setValueAtTime(0.2, ctx.currentTime)
       osc.start()
       osc.stop(ctx.currentTime + 0.4)

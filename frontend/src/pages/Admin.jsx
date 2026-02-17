@@ -52,8 +52,8 @@ export default function Admin() {
           <div class="qr-container">
             <div style="position:relative;display:inline-block">
               <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrValue)}" alt="QR Code" />
-              <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:4px;border-radius:4px;z-index:10;">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/e/e8/Debre_Berhan_University_logo.png" style="width:50px;height:50px;display:block;" />
+              <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:white;padding:4px;border-radius:4px;z-index:999 !important;">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/e/e8/Debre_Berhan_University_logo.png" style="width:60px;height:60px;display:block;" />
               </div>
             </div>
           </div>

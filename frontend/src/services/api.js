@@ -125,6 +125,25 @@ export const scanAsset = async (student_id, qr_data, exit_token) => {
     const student = db.students.find(s => String(s.id) === String(student_id))
     const asset = db.assets.find(a => a.qr_signature === qr_data)
     
+    if (asset) {
+      // Check for duplicate scan within last 30 seconds
+      const recentLog = db.logs.find(l => 
+        String(l.asset_id) === String(asset.asset_id) && 
+        new Date(l.timestamp).getTime() > Date.now() - 30000
+      )
+      // Only prevent saving if the result was ALLOWED
+      // If it was blocked/stolen, we might want to log it again or at least alert
+      if (recentLog && recentLog.result === 'ALLOWED') {
+        // Return success but don't save a new log
+        return delay({
+          status: 'ALLOWED',
+          reason: 'Already scanned recently',
+          student: student || { id: student_id, name: `Student ${student_id}`, status: 'blocked' },
+          asset
+        })
+      }
+    }
+    
     let result = 'ALLOWED'
     let reason = 'Exit verified successfully'
     
